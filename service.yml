@@ -6,7 +6,7 @@ metadata:
   name: jenkins-project-service
   namespace: jenkins-project
 spec:
-  type: LoadBalancer
+  type: clusterIP
   selector:
     app: jenkins-project
   ports:

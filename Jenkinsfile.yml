@@ -1,0 +1,56 @@
+pipeline {
+    agent any 
+
+    tools {
+        terraform 'terraforrm' //from global config
+    }
+
+    environment { 
+        DOCKERHUB_CREDENTIALS= credentials('dockerhub')
+        AWS_ACCESS_KEY= credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY= credentials('aws-secrete-key')
+    }
+
+    stages {
+        stage('checkout') {
+            steps {
+                git url: "https://github.com/chougulesumeru/jenkins-ci-cd-pipeline-project.git", branch: 'main'
+            }
+        }
+
+        stage('build docker image') {
+            steps {
+                script {
+                    dockerimage= docker.build("sumeruc/jenkins-project:${env.BUILD_ID}")
+                }
+            }
+        }
+
+        stage('push to docker hub') {
+            steps{
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub')
+                    dockerimage.push('latest')
+                }
+            }
+        }
+
+        stage('provision infra with terraform'){
+            steps{
+                dir('terraform') {
+                    sh 'terraform init'
+                    sh 'terraform validate -auto-approve'
+                    sh 'terraform plan -auto-approve'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('deploy to kunernetes') {
+            steps{
+                sh 'kubectl apply -f deployment.yml'
+                sh 'kubectl apply -f service.yml'
+            }
+        }
+    }
+}
