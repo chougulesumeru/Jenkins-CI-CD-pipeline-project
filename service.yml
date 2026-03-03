@@ -1,0 +1,14 @@
+# configure service with k8s
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-project-service
+  namespace: jenkins-project
+spec:
+  type: LoadBalancer
+  selector:
+    app: jenkins-project
+  ports:
+    - containerPort: 3000
+      targetPort: 3000

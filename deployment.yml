@@ -1,0 +1,23 @@
+#configure deployment file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-app
+  namespace: jenkins-project
+spec:
+  replicas: 2
+  selectors:
+    matchLabels:
+      app: jenkins-project
+  template:
+    metadata:
+      name: devops-app
+      labels:
+        app: jenkins-project
+    spec:
+      containers:
+        - name: jenkins-project-container
+          image: sumeruc/devops-app:latest
+          ports:
+            - containerPort: 3000
