@@ -1,0 +1,9 @@
+Create credential in jenkins
+
+1. manage jenkins-crdential-syste-global credential-add credential
+2. select username and password 
+username: docker user name
+password: you just created docker token 
+3. id ; docker-hub-cred
+4. description : docke rhub cred
+5. create 
