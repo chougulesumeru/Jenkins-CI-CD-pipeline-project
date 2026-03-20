@@ -1,0 +1,46 @@
+pipeline {
+    agent any 
+
+    environment {
+        //this pulls your dockerhub credential automatically
+        DOCKERHUB_CREDENTIAL= credential('docker-hub-cred')
+        IMAGE_NAME= sumeruc123/myapp
+    }
+
+    stages{
+        stage('1.git checkout'){
+            steps{
+                git url : "paste you git repo url", 
+                    branch : "main"
+                    credentialId: 'git-cred'
+            }
+        }
+
+        stage('2.build docker image'){
+            steps{
+                sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .'
+                sh 'docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest'
+            }
+        }
+
+
+        stage('3. login to docker hub'){
+            steps{
+                sh 'echo $DOCKERHUB_CREDENTIAL_PSW | docker login -u $DOCKERHUB_CREDENTIAL_USR --password-stdin'
+            }
+        }
+
+        stage('4. Push images to docker hub'){
+            steps{
+                sh 'docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}'
+                sh 'docker push ${DOCKER_IMAGE}:latest'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+        }
+    }
+}
