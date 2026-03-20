@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_REPO= "sumeruc123/myapp"
+        GIT_REPO= "https://github.com/sumeruc123/myapp.git"
+    }
+
+    stages{
+        stage('1 git checkoout '){
+            steps{
+                git url: "https://github.com/sumeru123/myapp.git"
+                    credential: "git-cred"
+                    branch : "main"
+            }
+        }
+
+        stage('2. build docker images'){
+            steps{
+                sh 'docker build -t "${DOCKERHUB_REPO}:${BUILD_NUMBER}"'
+                sh 'docker build t "${DOCKERHUB_REPO}":latest'
+            }
+        }
+
+        stage('3. login to docker hub'){
+            steps{
+                sh 'echo "$DOCKERHUB_CREDENTIAL_PSW" | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
+        }
+
+        stage('4. push images to docker hub'){
+            steps{
+                sh 'docker push "$DOCKERHUB_REPO": "$BUILD_NUMBER"'
+                sh 'docker push $DOCKERHUB_REPO: latest'
+            }
+        }
+
+        stage('5. cleanup image'){
+            steps{
+                sh 'docker logout || true'
+                sh 'dokcer rmi $DOCKERHUB_REPO: $BUILD_NUMBER'
+                sh 'docker rmi $DOCKERHUB_REPO:latest'
+            }
+        }
+    }
+}
