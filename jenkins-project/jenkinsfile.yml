@@ -1,0 +1,90 @@
+// jenkins pipeline is a serires of automated steps
+// kubernnets agents spin up pods on demand. scale to zero when idle.
+// jenkins pipeline is series of automated steps. Click a stage below to explore it.
+// two pipelines syntaxes  
+
+// Environment variables
+pipeline{
+    agent any 
+    environment {
+        APP_NAME = "myapp"
+        DOCKER_REG = "registry.example.com"
+        DB_PASSWORD= credentials('db-secret')  //from jenkins
+    }
+
+    stages{
+        stage('build'){
+            steps{
+                sh "scho building ${APP_NAME}"
+                sh  "docker build -t ${DOCKER_REG}/${APP_NAME}:${BUILD_NUMBER}"
+            }
+        }
+    }
+} 
+
+//when conditions and parallel execution
+pipeline{
+    agent any {
+        stages {
+            stage('test in paralle'){
+                parallel{
+                    stage('unit test'){
+                        steps {
+                            sh 'npm run test:unit'
+                        }
+                    }
+                    stage('integration tests'){
+                        steps{
+                            sh 'npm run tets:integration'
+                        }
+                    }
+                    stage('E2E tests'){
+                        steps {
+                            sh 'npm run test:e2e'
+                        }
+                    }
+                }
+            }
+
+            stage('deplot to prod'){
+                when{
+                    branch 'main'
+                    not {
+                        changeRequest()
+                    }
+                }
+                steps{
+                    input message: 'deploy to production', ok: 'yes'
+                    sh './deploy.sh prod'
+                }
+            }
+        }
+
+        post{
+            always {
+                junit '**/test-results/*.xml' 
+            }
+            }
+        }
+    }
+}
+
+
+//agent directive example 
+agent any 
+
+agent one 
+
+agent {
+    label 'linux && docker'
+}
+
+//run in docker container
+
+agent{
+    docker {
+        image 'python:latest'
+        registry: 'https://registry.example.com'
+        registryurl: 'https://registry.example.com'
+    }
+}
